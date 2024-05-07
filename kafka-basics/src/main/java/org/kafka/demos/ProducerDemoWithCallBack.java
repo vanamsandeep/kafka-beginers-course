@@ -1,16 +1,18 @@
 package org.kafka.demos;
 
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class ProducerDemo {
+public class ProducerDemoWithCallBack {
 
-    private static final Logger log = LoggerFactory.getLogger(ProducerDemo.class);
+    private static final Logger log = LoggerFactory.getLogger(ProducerDemoWithCallBack.class);
 
     public static void main(String[] args) {
 
@@ -39,7 +41,21 @@ public class ProducerDemo {
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>("demo_java", "hello world testing the  testing message");
 
         //send data
-        producer.send(producerRecord);
+        producer.send(producerRecord, new Callback() {
+            @Override
+            public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                if(e == null){
+                    log.info("Received Meta Data \n" +
+                            "Topic :"+recordMetadata.topic() +"\n"+
+                            "Partition :"+ recordMetadata.partition()+"\n"+
+                            "Offset: "+ recordMetadata.offset() +" \n" +
+                            "time stamp"+ recordMetadata.timestamp() +"\n"+
+                            "to string "+ recordMetadata);
+                }else{
+                    log.error("Error happend while creating messages " +e);
+                }
+            }
+        });
 
         //flush out the
         producer.flush();
